@@ -182,7 +182,7 @@ export default function Dashboard() {
             </p>
             <div style={{ display: 'inline-block', padding: 16, background: 'white', borderRadius: 12, border: '2px solid #f0f0f0' }}>
               <QRCodeSVG
-                value={`http://192.168.0.137:5173/inscription/${commercant.id}`}
+                value={`${window.location.origin}/inscription/${commercant.id}`}
                 size={200}
                 fgColor={commercant.couleur || '#6c63ff'}
               />
@@ -191,7 +191,7 @@ export default function Dashboard() {
               {window.location.origin}/inscription/{commercant.id}
             </p>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => window.open(`http://192.168.0.137:5173/inscription/${commercant.id}`, '_blank')}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => window.open(`${window.location.origin}/inscription/${commercant.id}`, '_blank')}>
                 Ouvrir la page
               </button>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowQR(false)}>Fermer</button>
