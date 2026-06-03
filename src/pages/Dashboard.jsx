@@ -8,6 +8,8 @@ export default function Dashboard() {
   const [showAdd, setShowAdd] = useState(false)
   const [showScan, setShowScan] = useState(null)
   const [showQR, setShowQR] = useState(false)
+  const [showNotif, setShowNotif] = useState(false)
+  const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [scanNote, setScanNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -87,6 +89,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nouveau client</button>
           <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR Code</button>
+          <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔 Notifier</button>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
         </div>
       </div>
@@ -168,6 +171,58 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Notification */}
+      {showNotif && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: 400 }}>
+            <h3 style={{ marginBottom: 16 }}>🔔 Envoyer une notification</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input
+                placeholder="Titre (ex: Offre spéciale 🎉)"
+                value={notifForm.title}
+                onChange={e => setNotifForm({ ...notifForm, title: e.target.value })}
+              />
+              <textarea
+                placeholder="Message (ex: -20% ce weekend sur tout le menu !)"
+                value={notifForm.body}
+                onChange={e => setNotifForm({ ...notifForm, body: e.target.value })}
+                rows={3}
+                style={{ padding: '10px 14px', border: '1.5px solid #ddd', borderRadius: 8, fontSize: 14, resize: 'vertical', fontFamily: 'inherit' }}
+              />
+              <select
+                value={notifForm.client_id}
+                onChange={e => setNotifForm({ ...notifForm, client_id: e.target.value })}
+              >
+                <option value="">Tous les clients</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.prenom} {c.nom} — {c.id}</option>
+                ))}
+              </select>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} disabled={loading || !notifForm.title || !notifForm.body}
+                  onClick={async () => {
+                    setLoading(true)
+                    try {
+                      const payload = { title: notifForm.title, body: notifForm.body }
+                      if (notifForm.client_id) payload.client_id = notifForm.client_id
+                      const { data } = await api.post('/notifications/send', payload)
+                      setShowNotif(false)
+                      setNotifForm({ title: '', body: '', client_id: '' })
+                      flash(`✅ Notification envoyée à ${data.sent} client(s)`)
+                    } catch (err) {
+                      flash('❌ ' + (err.response?.data?.error || 'Erreur'))
+                    }
+                    setLoading(false)
+                  }}>
+                  {loading ? '...' : 'Envoyer'}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowNotif(false)}>Annuler</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
