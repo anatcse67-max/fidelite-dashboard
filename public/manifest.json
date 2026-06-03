@@ -1,7 +1,7 @@
 {
   "name": "Fidélité",
   "short_name": "Fidélité",
-  "start_url": "/",
+  "start_url": "/carte-home",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#6c63ff",

@@ -19,11 +19,8 @@ export default function Carte() {
     api.get(`/carte/${id}`)
       .then(r => {
         setData(r.data)
-        // Manifest dynamique pour que "Ajouter à l'écran d'accueil" ouvre la bonne carte
-        const manifestUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/carte/${id}/manifest.json`
-        let link = document.querySelector('link[rel="manifest"]')
-        if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link) }
-        link.href = manifestUrl
+        // Mémoriser l'ID pour que l'icône sur l'écran d'accueil rouvre la bonne carte
+        localStorage.setItem('carte_id', id)
       })
       .catch(() => setError('Carte introuvable'))
   }, [id])
