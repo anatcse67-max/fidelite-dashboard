@@ -32,7 +32,7 @@ export default function Inscription() {
       // Sauvegarder l'ID pour ne plus avoir à se réinscrire
       localStorage.setItem(`carte_${commercantId}`, data.id)
       localStorage.setItem('carte_id', data.id)
-      setClient(data)
+      navigate(`/carte/${data.id}`, { replace: true })
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de l\'inscription')
     }
