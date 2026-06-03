@@ -17,7 +17,14 @@ export default function Carte() {
 
   useEffect(() => {
     api.get(`/carte/${id}`)
-      .then(r => setData(r.data))
+      .then(r => {
+        setData(r.data)
+        // Manifest dynamique pour que "Ajouter à l'écran d'accueil" ouvre la bonne carte
+        const manifestUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/carte/${id}/manifest.json`
+        let link = document.querySelector('link[rel="manifest"]')
+        if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link) }
+        link.href = manifestUrl
+      })
       .catch(() => setError('Carte introuvable'))
   }, [id])
 
