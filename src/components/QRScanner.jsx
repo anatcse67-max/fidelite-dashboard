@@ -14,11 +14,11 @@ export default function QRScanner({ onScan, onClose }) {
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 220, height: 220 } },
       (text) => {
-        // Un QR code détecté
         if (text.startsWith('ID-')) {
           scanner.stop().catch(() => {})
           setScanning(false)
-          onScan(text)
+          onClose()
+          setTimeout(() => onScan(text), 100)
         }
       },
       () => {}
