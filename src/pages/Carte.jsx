@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import api from '../api'
 
 function urlBase64ToUint8Array(base64String) {
@@ -132,6 +133,15 @@ export default function Carte() {
             )}
           </div>
         )}
+
+        {/* QR Code du client */}
+        <div className="card" style={{ marginBottom: 12, textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Mon QR Code</p>
+          <div style={{ display: 'inline-block', padding: 12, background: 'white', borderRadius: 12, border: `3px solid ${commercant.couleur || '#6c63ff'}` }}>
+            <QRCodeSVG value={client.id} size={160} fgColor={commercant.couleur || '#6c63ff'} />
+          </div>
+          <p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>Montre ce QR code au commerçant pour gagner tes points</p>
+        </div>
 
         {/* Code de parrainage */}
         {client.referral_code && (

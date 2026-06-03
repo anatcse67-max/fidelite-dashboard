@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import QRScanner from '../components/QRScanner'
 import api from '../api'
 
 export default function Dashboard() {
@@ -9,6 +10,7 @@ export default function Dashboard() {
   const [showScan, setShowScan] = useState(null)
   const [showQR, setShowQR] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [scanNote, setScanNote] = useState('')
@@ -72,6 +74,19 @@ export default function Dashboard() {
     } catch {}
   }
 
+  const handleQRScan = async (clientId) => {
+    setShowScanner(false)
+    setLoading(true)
+    try {
+      const { data } = await api.post(`/clients/${clientId}/scan`, { note: 'Scan QR code' })
+      fetchClients()
+      flash(`✅ ${data.client.prenom || clientId} — +${data.points_ajoutes} pt · Total : ${data.client.points} pts`)
+    } catch (err) {
+      flash('❌ ' + (err.response?.data?.error || 'Client introuvable'))
+    }
+    setLoading(false)
+  }
+
   const resetPoints = async (id) => {
     if (!confirm('Confirmer la récompense et remettre les points à 0 ?')) return
     try {
@@ -96,6 +111,7 @@ export default function Dashboard() {
           <p style={{ color: '#666', fontSize: 13 }}>{commercant.type_activite} · {clients.length} client(s)</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn btn-success" onClick={() => setShowScanner(true)}>📷 Scanner</button>
           <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nouveau client</button>
           <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR Code</button>
           <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔 Notifier</button>
@@ -189,6 +205,14 @@ export default function Dashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Scanner QR */}
+      {showScanner && (
+        <QRScanner
+          onScan={handleQRScan}
+          onClose={() => setShowScanner(false)}
+        />
       )}
 
       {/* Modal Notification */}
