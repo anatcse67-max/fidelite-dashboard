@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api'
 
 export default function Inscription() {
   const { commercantId } = useParams()
+  const navigate = useNavigate()
   const [enseigne, setEnseigne] = useState(null)
   const [form, setForm] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [client, setClient] = useState(null)
@@ -11,6 +12,12 @@ export default function Inscription() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Si le client a déjà une carte pour cette enseigne, redirige directement
+    const savedId = localStorage.getItem(`carte_${commercantId}`)
+    if (savedId) {
+      navigate(`/carte/${savedId}`, { replace: true })
+      return
+    }
     api.get(`/inscription/${commercantId}`)
       .then(r => setEnseigne(r.data))
       .catch(() => setError('Enseigne introuvable'))
@@ -22,6 +29,9 @@ export default function Inscription() {
     setError('')
     try {
       const { data } = await api.post(`/inscription/${commercantId}`, form)
+      // Sauvegarder l'ID pour ne plus avoir à se réinscrire
+      localStorage.setItem(`carte_${commercantId}`, data.id)
+      localStorage.setItem('carte_id', data.id)
       setClient(data)
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de l\'inscription')

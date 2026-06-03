@@ -19,8 +19,8 @@ export default function Carte() {
     api.get(`/carte/${id}`)
       .then(r => {
         setData(r.data)
-        // Mémoriser l'ID pour que l'icône sur l'écran d'accueil rouvre la bonne carte
         localStorage.setItem('carte_id', id)
+        localStorage.setItem(`carte_${r.data.client.commercant_id}`, id)
       })
       .catch(() => setError('Carte introuvable'))
   }, [id])
