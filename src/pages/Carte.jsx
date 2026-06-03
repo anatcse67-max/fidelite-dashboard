@@ -21,6 +21,10 @@ export default function Carte() {
         setData(r.data)
         localStorage.setItem('carte_id', id)
         localStorage.setItem(`carte_${r.data.client.commercant_id}`, id)
+        // Manifest dynamique depuis le même domaine — iOS accepte ça
+        let link = document.querySelector('link[rel="manifest"]')
+        if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link) }
+        link.href = `/api/manifest/${id}`
       })
       .catch(() => setError('Carte introuvable'))
   }, [id])
