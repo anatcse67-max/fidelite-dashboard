@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import api from '../api'
 
 export default function Dashboard() {
   const [clients, setClients] = useState([])
   const [showAdd, setShowAdd] = useState(false)
   const [showScan, setShowScan] = useState(null)
+  const [showQR, setShowQR] = useState(false)
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [scanNote, setScanNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -84,6 +86,7 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nouveau client</button>
+          <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR Code</button>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
         </div>
       </div>
@@ -165,6 +168,34 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR Code */}
+      {showQR && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: 360, textAlign: 'center' }}>
+            <h3 style={{ marginBottom: 8 }}>📱 QR Code inscription</h3>
+            <p style={{ color: '#666', fontSize: 13, marginBottom: 20 }}>
+              Tes clients scannent ce QR code pour s'inscrire et obtenir leur carte automatiquement
+            </p>
+            <div style={{ display: 'inline-block', padding: 16, background: 'white', borderRadius: 12, border: '2px solid #f0f0f0' }}>
+              <QRCodeSVG
+                value={`${window.location.origin}/inscription/${commercant.id}`}
+                size={200}
+                fgColor={commercant.couleur || '#6c63ff'}
+              />
+            </div>
+            <p style={{ fontSize: 11, color: '#aaa', marginTop: 12, wordBreak: 'break-all' }}>
+              {window.location.origin}/inscription/{commercant.id}
+            </p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => window.open(`${window.location.origin}/inscription/${commercant.id}`, '_blank')}>
+                Ouvrir la page
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowQR(false)}>Fermer</button>
+            </div>
           </div>
         </div>
       )}
