@@ -133,6 +133,15 @@ export default function Carte() {
           </div>
         )}
 
+        {/* Code de parrainage */}
+        {client.referral_code && (
+          <div className="card" style={{ marginBottom: 12, textAlign: 'center' }}>
+            <p style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Ton code de parrainage</p>
+            <p style={{ fontSize: 22, fontWeight: 900, letterSpacing: 4, color: commercant.couleur || '#6c63ff' }}>{client.referral_code}</p>
+            <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>Partage ce code — tu gagnes des points bonus pour chaque ami inscrit 🤝</p>
+          </div>
+        )}
+
         {/* Passages */}
         {passages.length > 0 && (
           <div className="card">

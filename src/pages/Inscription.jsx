@@ -6,7 +6,7 @@ export default function Inscription() {
   const { commercantId } = useParams()
   const navigate = useNavigate()
   const [enseigne, setEnseigne] = useState(null)
-  const [form, setForm] = useState({ prenom: '', nom: '', telephone: '', email: '' })
+  const [form, setForm] = useState({ prenom: '', nom: '', telephone: '', email: '', referral_code: '' })
   const [client, setClient] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -119,6 +119,12 @@ export default function Inscription() {
             placeholder="Email"
             value={form.email}
             onChange={e => setForm({ ...form, email: e.target.value })}
+          />
+          <input
+            placeholder="Code de parrainage (optionnel)"
+            value={form.referral_code}
+            onChange={e => setForm({ ...form, referral_code: e.target.value.toUpperCase() })}
+            style={{ letterSpacing: 2 }}
           />
           {error && <p className="error">{error}</p>}
           <button

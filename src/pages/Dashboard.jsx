@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import api from '../api'
 
@@ -72,6 +72,15 @@ export default function Dashboard() {
     } catch {}
   }
 
+  const resetPoints = async (id) => {
+    if (!confirm('Confirmer la récompense et remettre les points à 0 ?')) return
+    try {
+      await api.post(`/clients/${id}/reset`)
+      fetchClients()
+      flash('🎁 Récompense validée — points remis à zéro')
+    } catch {}
+  }
+
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
 
   const progress = (pts) => Math.min(100, Math.round((pts / (commercant.seuil_reward || 10)) * 100))
@@ -90,6 +99,7 @@ export default function Dashboard() {
           <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nouveau client</button>
           <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR Code</button>
           <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔 Notifier</button>
+          <Link to="/stats" style={{ padding: '10px 20px', background: 'white', color: '#6c63ff', border: '2px solid #6c63ff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>📊 Stats</Link>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
         </div>
       </div>
@@ -142,6 +152,12 @@ export default function Dashboard() {
                     border: 'none', borderRadius: 8, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                   Carte
                 </a>
+                {c.points >= (commercant.seuil_reward || 10) && (
+                  <button className="btn" style={{ padding: '8px 12px', fontSize: 13, background: '#f59e0b', color: 'white' }}
+                    onClick={() => resetPoints(c.id)} title="Valider récompense et remettre à 0">
+                    🎁
+                  </button>
+                )}
                 <button className="btn btn-danger" style={{ padding: '8px 12px', fontSize: 13 }}
                   onClick={() => deleteClient(c.id)}>
                   🗑️
