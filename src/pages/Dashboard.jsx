@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [showNotif, setShowNotif] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [mobileSidebar, setMobileSidebar] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
   const [scanNote, setScanNote] = useState('')
@@ -349,10 +350,39 @@ export default function Dashboard() {
         <button className="mobile-nav-item" onClick={() => setShowNotif(true)}>
           <span>🔔</span><span>Notifs</span>
         </button>
-        <button className="mobile-nav-item" onClick={() => setShowQR(true)}>
-          <span>📱</span><span>QR Code</span>
+        <button className="mobile-nav-item" onClick={() => setShowMobileMenu(true)}>
+          <span>⋯</span><span>Plus</span>
         </button>
       </nav>
+
+      {/* Menu mobile "Plus" */}
+      {showMobileMenu && (
+        <div className="modal-backdrop" onClick={() => setShowMobileMenu(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: '16px 16px 0 0', position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '100%' }}>
+            <div style={{ padding: '12px 0' }}>
+              {[
+                { icon: '📱', label: 'QR Code enseigne', action: () => { setShowQR(true); setShowMobileMenu(false) } },
+                { icon: '📥', label: 'Exporter les clients (CSV)', action: () => { window.location.href = `${import.meta.env.VITE_API_URL || 'https://fidelite-backend-production.up.railway.app'}/clients/export`; setShowMobileMenu(false) } },
+              ].map(({ icon, label, action }) => (
+                <button key={label} onClick={action} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--text)' }}>
+                  <span style={{ fontSize: 22 }}>{icon}</span>{label}
+                </button>
+              ))}
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+              <Link to="/profile" onClick={() => setShowMobileMenu(false)} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--text)', textDecoration: 'none' }}>
+                <span style={{ fontSize: 22 }}>⚙️</span>Mon profil
+              </Link>
+              <button onClick={() => { setDark(!dark); setShowMobileMenu(false) }} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--text)' }}>
+                <span style={{ fontSize: 22 }}>{dark ? '☀️' : '🌙'}</span>{dark ? 'Mode clair' : 'Mode sombre'}
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+              <button onClick={() => { logout(); setShowMobileMenu(false) }} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--danger)' }}>
+                <span style={{ fontSize: 22 }}>⏻</span>Déconnexion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scanner QR */}
       {showScanner && <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />}
