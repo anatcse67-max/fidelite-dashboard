@@ -40,3 +40,66 @@ input:focus, select:focus { border-color: #6c63ff; }
 }
 
 .error { color: #ef4444; font-size: 13px; margin-top: 8px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .card { padding: 16px; border-radius: 10px; }
+
+  .btn { padding: 8px 14px; font-size: 13px; }
+
+  /* Header dashboard mobile */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  .dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .dashboard-actions .btn {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  /* Liste clients mobile */
+  .client-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .client-row-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .client-row-actions .btn,
+  .client-row-actions a,
+  .client-row-actions button {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Modals plein écran sur mobile */
+  .modal-overlay {
+    align-items: flex-end !important;
+  }
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Stats grid mobile */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .stats-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

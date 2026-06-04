@@ -103,20 +103,20 @@ export default function Dashboard() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>
             {commercant.emoji} {commercant.nom_enseigne}
           </h1>
           <p style={{ color: '#666', fontSize: 13 }}>{commercant.type_activite} · {clients.length} client(s)</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="dashboard-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button className="btn btn-success" onClick={() => setShowScanner(true)}>📷 Scanner</button>
-          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nouveau client</button>
-          <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR Code</button>
-          <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔 Notifier</button>
-          <Link to="/stats" style={{ padding: '10px 20px', background: 'white', color: '#6c63ff', border: '2px solid #6c63ff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>📊 Stats</Link>
-          <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
+          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Client</button>
+          <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR</button>
+          <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔</button>
+          <Link to="/stats" style={{ padding: '10px 14px', background: 'white', color: '#6c63ff', border: '2px solid #6c63ff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>📊</Link>
+          <button className="btn btn-outline" onClick={logout}>⏻</button>
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function Dashboard() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {clients.map(c => (
-            <div key={c.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div key={c.id} className="card client-row" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: commercant.couleur || '#6c63ff',
                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700, fontSize: 16, flexShrink: 0 }}>
@@ -158,12 +158,12 @@ export default function Dashboard() {
                 </div>
                 <p style={{ fontSize: 11, color: '#888', marginTop: 3 }}>{c.points} / {commercant.seuil_reward} pts</p>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div className="client-row-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <button className="btn btn-success" style={{ padding: '8px 14px', fontSize: 13 }}
                   onClick={() => { setShowScan(c); setScanNote('') }}>
                   Scanner
                 </button>
-                <a href={`http://localhost:3000/carte/${c.id}`} target="_blank" rel="noreferrer"
+                <a href={`https://fidelite-dashboard-kohl.vercel.app/carte/${c.id}`} target="_blank" rel="noreferrer"
                   style={{ padding: '8px 14px', fontSize: 13, background: '#f0eeff', color: '#6c63ff',
                     border: 'none', borderRadius: 8, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
                   Carte
@@ -186,8 +186,8 @@ export default function Dashboard() {
 
       {/* Modal Ajouter client */}
       {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card" style={{ width: 400 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
             <h3 style={{ marginBottom: 20 }}>Nouveau client</h3>
             <form onSubmit={addClient} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input placeholder="Prénom *" value={newClient.prenom} onChange={e => setNewClient({ ...newClient, prenom: e.target.value })} required />
@@ -217,8 +217,8 @@ export default function Dashboard() {
 
       {/* Modal Notification */}
       {showNotif && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card" style={{ width: 400 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
+          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
             <h3 style={{ marginBottom: 16 }}>🔔 Envoyer une notification</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input
@@ -269,7 +269,7 @@ export default function Dashboard() {
 
       {/* Modal QR Code */}
       {showQR && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
           <div className="card" style={{ width: 360, textAlign: 'center' }}>
             <h3 style={{ marginBottom: 8 }}>📱 QR Code inscription</h3>
             <p style={{ color: '#666', fontSize: 13, marginBottom: 20 }}>
@@ -297,7 +297,7 @@ export default function Dashboard() {
 
       {/* Modal Scanner */}
       {showScan && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
           <div className="card" style={{ width: 360, textAlign: 'center' }}>
             <p style={{ fontSize: 48, marginBottom: 8 }}>📲</p>
             <h3>Scanner un passage</h3>
