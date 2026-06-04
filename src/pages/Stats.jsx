@@ -6,11 +6,29 @@ export default function Stats() {
   const [stats, setStats] = useState(null)
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [resendForm, setResendForm] = useState(null) // { title, body }
+  const [sending, setSending] = useState(false)
 
   const deleteNotif = async (id) => {
     if (!confirm('Supprimer cette notification de l\'historique ?')) return
     await api.delete(`/notifications/history/${id}`)
     setNotifs(notifs.filter(n => n.id !== id))
+  }
+
+  const resendNotif = async () => {
+    if (!resendForm) return
+    setSending(true)
+    try {
+      const { data } = await api.post('/notifications/send', { title: resendForm.title, body: resendForm.body })
+      setResendForm(null)
+      alert(`✓ Notification renvoyée à ${data.sent} client(s)`)
+      // Rafraîchir l'historique
+      const r = await api.get('/notifications/history')
+      setNotifs(r.data)
+    } catch (err) {
+      alert('Erreur : ' + (err.response?.data?.error || 'Erreur'))
+    }
+    setSending(false)
   }
   const navigate = useNavigate()
   const commercant = JSON.parse(localStorage.getItem('commercant') || '{}')
@@ -105,15 +123,47 @@ export default function Stats() {
                   {new Date(n.created_at).toLocaleDateString('fr-FR')} · {n.sent_to} destinataire(s)
                 </p>
               </div>
-              <button onClick={() => deleteNotif(n.id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 16, padding: '2px 4px', flexShrink: 0 }}
-                title="Supprimer">
-                🗑
-              </button>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button onClick={() => setResendForm({ title: n.title, body: n.body })}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 4px' }}
+                  title="Renvoyer">
+                  🔁
+                </button>
+                <button onClick={() => deleteNotif(n.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 16, padding: '2px 4px' }}
+                  title="Supprimer">
+                  🗑
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
+      {/* Modal renvoyer notification */}
+      {resendForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+          <div className="card" style={{ width: '100%', maxWidth: 420 }}>
+            <h3 style={{ marginBottom: 16, fontSize: 16 }}>🔁 Renvoyer la notification</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 500, color: '#666', display: 'block', marginBottom: 4 }}>Titre</label>
+                <input value={resendForm.title} onChange={e => setResendForm({ ...resendForm, title: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 500, color: '#666', display: 'block', marginBottom: 4 }}>Message</label>
+                <textarea rows={3} value={resendForm.body} onChange={e => setResendForm({ ...resendForm, body: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #ddd', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} disabled={sending} onClick={resendNotif}>
+                  {sending ? 'Envoi...' : 'Envoyer à tous les clients'}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setResendForm(null)}>Annuler</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
