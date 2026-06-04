@@ -6,6 +6,12 @@ export default function Stats() {
   const [stats, setStats] = useState(null)
   const [notifs, setNotifs] = useState([])
   const [loading, setLoading] = useState(true)
+
+  const deleteNotif = async (id) => {
+    if (!confirm('Supprimer cette notification de l\'historique ?')) return
+    await api.delete(`/notifications/history/${id}`)
+    setNotifs(notifs.filter(n => n.id !== id))
+  }
   const navigate = useNavigate()
   const commercant = JSON.parse(localStorage.getItem('commercant') || '{}')
 
@@ -90,13 +96,20 @@ export default function Stats() {
           <p style={{ fontWeight: 700, marginBottom: 12 }}>🔔 Notifications envoyées</p>
           {notifs.length === 0 ? (
             <p style={{ color: '#999', fontSize: 13 }}>Aucune notification envoyée</p>
-          ) : notifs.slice(0, 5).map(n => (
-            <div key={n.id} style={{ padding: '6px 0', borderTop: '1px solid #f0f0f0' }}>
-              <p style={{ fontSize: 13, fontWeight: 600 }}>{n.title}</p>
-              <p style={{ fontSize: 12, color: '#666' }}>{n.body}</p>
-              <p style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-                {new Date(n.created_at).toLocaleDateString('fr-FR')} · {n.sent_to} destinataire(s)
-              </p>
+          ) : notifs.map(n => (
+            <div key={n.id} style={{ padding: '8px 0', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 600 }}>{n.title}</p>
+                <p style={{ fontSize: 12, color: '#666' }}>{n.body}</p>
+                <p style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
+                  {new Date(n.created_at).toLocaleDateString('fr-FR')} · {n.sent_to} destinataire(s)
+                </p>
+              </div>
+              <button onClick={() => deleteNotif(n.id)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 16, padding: '2px 4px', flexShrink: 0 }}
+                title="Supprimer">
+                🗑
+              </button>
             </div>
           ))}
         </div>
