@@ -79,7 +79,7 @@ export default function Stats() {
             <p style={{ color: '#999', fontSize: 13 }}>Aucun client</p>
           ) : stats.topClients.map((c, i) => (
             <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: i > 0 ? '1px solid #f0f0f0' : 'none' }}>
-              <span style={{ fontSize: 13 }}>#{i + 1} {c.id}</span>
+              <span style={{ fontSize: 13 }}>#{i + 1} {c.prenom} {c.nom || ''}</span>
               <span style={{ fontWeight: 700, color: commercant.couleur || '#6c63ff', fontSize: 13 }}>{c.points} pts</span>
             </div>
           ))}

@@ -9,7 +9,7 @@ const COULEURS = ['#6c63ff', '#ef4444', '#f97316', '#22c55e', '#3b82f6', '#ec489
 export default function Register() {
   const [form, setForm] = useState({
     email: '', password: '', nom_enseigne: '', type_activite: 'Restaurant',
-    emoji: '🏪', couleur: '#6c63ff', pts_par_passage: 1, seuil_reward: 10, reward_desc: ''
+    emoji: '🏪', couleur: '#6c63ff', pts_par_passage: 1, seuil_reward: 10, reward_desc: '', register_code: ''
   })
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -34,6 +34,16 @@ export default function Register() {
       <div className="card" style={{ width: 460 }}>
         <h2 style={{ marginBottom: 24, fontSize: 22 }}>🏪 Créer mon enseigne</h2>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <input
+              placeholder="🔑 Code d'accès *"
+              value={form.register_code}
+              onChange={e => set('register_code', e.target.value)}
+              required
+              style={{ borderColor: form.register_code ? '#22c55e' : '#ddd' }}
+            />
+            <p style={{ fontSize: 11, color: '#999', marginTop: 4 }}>Code fourni par l'administrateur</p>
+          </div>
           <input placeholder="Nom de l'enseigne" value={form.nom_enseigne} onChange={e => set('nom_enseigne', e.target.value)} required />
           <input type="email" placeholder="Email" value={form.email} onChange={e => set('email', e.target.value)} required />
           <input type="password" placeholder="Mot de passe" value={form.password} onChange={e => set('password', e.target.value)} required />
