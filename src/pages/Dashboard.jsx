@@ -40,6 +40,18 @@ export default function Dashboard() {
 
   const logout = () => { localStorage.clear(); navigate('/') }
 
+  const exportCSV = async () => {
+    try {
+      const { data } = await api.get('/clients/export', { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([data], { type: 'text/csv;charset=utf-8' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `clients-${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { showFlash('✗ Erreur lors de l\'export') }
+  }
+
   const addClient = async e => {
     e.preventDefault()
     setLoading(true)
@@ -150,7 +162,7 @@ export default function Dashboard() {
         <Link to="/profile" className="nav-item">
           <span className="nav-icon">⚙️</span> Mon profil
         </Link>
-        <button className="nav-item" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/clients/export`} >
+        <button className="nav-item" onClick={exportCSV}>
           <span className="nav-icon">📥</span> Export CSV
         </button>
       </nav>
@@ -362,7 +374,7 @@ export default function Dashboard() {
             <div style={{ padding: '12px 0' }}>
               {[
                 { icon: '📱', label: 'QR Code enseigne', action: () => { setShowQR(true); setShowMobileMenu(false) } },
-                { icon: '📥', label: 'Exporter les clients (CSV)', action: () => { window.location.href = `${import.meta.env.VITE_API_URL || 'https://fidelite-backend-production.up.railway.app'}/clients/export`; setShowMobileMenu(false) } },
+                { icon: '📥', label: 'Exporter les clients (CSV)', action: () => { exportCSV(); setShowMobileMenu(false) } },
               ].map(({ icon, label, action }) => (
                 <button key={label} onClick={action} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--text)' }}>
                   <span style={{ fontSize: 22 }}>{icon}</span>{label}
