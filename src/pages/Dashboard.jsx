@@ -6,6 +6,9 @@ import api from '../api'
 
 export default function Dashboard() {
   const [clients, setClients] = useState([])
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const PER_PAGE = 10
   const [showAdd, setShowAdd] = useState(false)
   const [showScan, setShowScan] = useState(null)
   const [showQR, setShowQR] = useState(false)
@@ -102,6 +105,12 @@ export default function Dashboard() {
 
   const progress = (pts) => Math.min(100, Math.round((pts / (commercant.seuil_reward || 10)) * 100))
 
+  const filteredClients = clients.filter(c =>
+    `${c.prenom} ${c.nom} ${c.id} ${c.telephone} ${c.email}`.toLowerCase().includes(search.toLowerCase())
+  )
+  const totalPages = Math.ceil(filteredClients.length / PER_PAGE)
+  const pagedClients = filteredClients.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
   const Sidebar = () => (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -196,9 +205,17 @@ export default function Dashboard() {
 
           {/* Table clients */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600 }}>Liste des clients</h2>
-              <span className="badge badge-primary">{clients.length} client{clients.length > 1 ? 's' : ''}</span>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600 }}>
+                Liste des clients
+                <span className="badge badge-primary" style={{ marginLeft: 8 }}>{clients.length}</span>
+              </h2>
+              <input
+                placeholder="🔍 Rechercher un client..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1) }}
+                style={{ width: 240, padding: '7px 12px', fontSize: 13 }}
+              />
             </div>
 
             {clients.length === 0 ? (
@@ -220,7 +237,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clients.map(c => (
+                  {pagedClients.map(c => (
                     <tr key={c.id}>
                       <td data-label="Client">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -271,6 +288,31 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            )}
+
+            {/* Pagination */}
+            {filteredClients.length > PER_PAGE && (
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filteredClients.length)} sur {filteredClients.length} clients
+                </p>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn btn-outline btn-sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Précédent</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <button key={p} className={`btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline'}`} onClick={() => setPage(p)}
+                      style={{ minWidth: 36 }}>{p}</button>
+                  ))}
+                  <button className="btn btn-outline btn-sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Suivant →</button>
+                </div>
+              </div>
+            )}
+
+            {/* Aucun résultat de recherche */}
+            {search && filteredClients.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 24, marginBottom: 8 }}>🔍</p>
+                <p style={{ fontWeight: 500 }}>Aucun client trouvé pour "{search}"</p>
+              </div>
             )}
           </div>
         </div>
