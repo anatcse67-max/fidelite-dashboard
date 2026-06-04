@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import QRScanner from '../components/QRScanner'
 import api from '../api'
@@ -11,11 +11,12 @@ export default function Dashboard() {
   const [showQR, setShowQR] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
-  const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
+  const [mobileSidebar, setMobileSidebar] = useState(false)
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
+  const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
   const [scanNote, setScanNote] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [flash, setFlash] = useState('')
   const navigate = useNavigate()
 
   const commercant = JSON.parse(localStorage.getItem('commercant') || '{}')
@@ -26,15 +27,12 @@ export default function Dashboard() {
     try {
       const { data } = await api.get('/clients')
       setClients(data)
-    } catch {
-      navigate('/')
-    }
+    } catch { navigate('/') }
   }
 
-  const logout = () => {
-    localStorage.clear()
-    navigate('/')
-  }
+  const showFlash = (m) => { setFlash(m); setTimeout(() => setFlash(''), 3500) }
+
+  const logout = () => { localStorage.clear(); navigate('/') }
 
   const addClient = async e => {
     e.preventDefault()
@@ -44,10 +42,8 @@ export default function Dashboard() {
       setNewClient({ prenom: '', nom: '', telephone: '', email: '' })
       setShowAdd(false)
       fetchClients()
-      flash('✅ Client ajouté !')
-    } catch (err) {
-      flash('❌ ' + (err.response?.data?.error || 'Erreur'))
-    }
+      showFlash('✓ Client ajouté avec succès')
+    } catch (err) { showFlash('✗ ' + (err.response?.data?.error || 'Erreur')) }
     setLoading(false)
   }
 
@@ -55,23 +51,11 @@ export default function Dashboard() {
     setLoading(true)
     try {
       const { data } = await api.post(`/clients/${id}/scan`, { note: scanNote })
-      setShowScan(null)
-      setScanNote('')
+      setShowScan(null); setScanNote('')
       fetchClients()
-      flash(`✅ +${data.points_ajoutes} point(s) — total : ${data.client.points} pts`)
-    } catch (err) {
-      flash('❌ ' + (err.response?.data?.error || 'Erreur'))
-    }
+      showFlash(`✓ +${data.points_ajoutes} pt — ${data.client.points} pts au total`)
+    } catch (err) { showFlash('✗ ' + (err.response?.data?.error || 'Erreur')) }
     setLoading(false)
-  }
-
-  const deleteClient = async (id) => {
-    if (!confirm('Supprimer ce client ?')) return
-    try {
-      await api.delete(`/clients/${id}`)
-      fetchClients()
-      flash('🗑️ Client supprimé')
-    } catch {}
   }
 
   const handleQRScan = async (clientId) => {
@@ -80,10 +64,8 @@ export default function Dashboard() {
     try {
       const { data } = await api.post(`/clients/${clientId}/scan`, { note: 'Scan QR code' })
       fetchClients()
-      flash(`✅ ${data.client.prenom || clientId} — +${data.points_ajoutes} pt · Total : ${data.client.points} pts`)
-    } catch (err) {
-      flash('❌ ' + (err.response?.data?.error || 'Client introuvable'))
-    }
+      showFlash(`✓ ${data.client.prenom || clientId} — +${data.points_ajoutes} pt · ${data.client.points} pts`)
+    } catch (err) { showFlash('✗ ' + (err.response?.data?.error || 'Client introuvable')) }
     setLoading(false)
   }
 
@@ -92,224 +74,346 @@ export default function Dashboard() {
     try {
       await api.post(`/clients/${id}/reset`)
       fetchClients()
-      flash('🎁 Récompense validée — points remis à zéro')
+      showFlash('✓ Récompense validée — points remis à zéro')
     } catch {}
   }
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
+  const deleteClient = async (id) => {
+    if (!confirm('Supprimer ce client ?')) return
+    try {
+      await api.delete(`/clients/${id}`)
+      fetchClients()
+      showFlash('✓ Client supprimé')
+    } catch {}
+  }
+
+  const sendNotif = async () => {
+    setLoading(true)
+    try {
+      const payload = { title: notifForm.title, body: notifForm.body }
+      if (notifForm.client_id) payload.client_id = notifForm.client_id
+      const { data } = await api.post('/notifications/send', payload)
+      setShowNotif(false)
+      setNotifForm({ title: '', body: '', client_id: '' })
+      showFlash(`✓ Notification envoyée à ${data.sent} client(s)`)
+    } catch (err) { showFlash('✗ ' + (err.response?.data?.error || 'Erreur')) }
+    setLoading(false)
+  }
 
   const progress = (pts) => Math.min(100, Math.round((pts / (commercant.seuil_reward || 10)) * 100))
 
+  const Sidebar = () => (
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: commercant.couleur || 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+            {commercant.emoji}
+          </div>
+          <div>
+            <div className="sidebar-logo">{commercant.nom_enseigne}</div>
+            <div className="sidebar-enseigne">{commercant.type_activite}</div>
+          </div>
+        </div>
+      </div>
+
+      <nav className="sidebar-nav">
+        <div className="label" style={{ padding: '8px 12px 4px', fontSize: 11, letterSpacing: 0.5 }}>MENU</div>
+        <Link to="/dashboard" className="nav-item active">
+          <span className="nav-icon">👥</span> Clients
+          <span className="badge badge-primary" style={{ marginLeft: 'auto' }}>{clients.length}</span>
+        </Link>
+        <Link to="/stats" className="nav-item">
+          <span className="nav-icon">📊</span> Statistiques
+        </Link>
+        <button className="nav-item" onClick={() => setShowQR(true)}>
+          <span className="nav-icon">📱</span> QR Code enseigne
+        </button>
+        <button className="nav-item" onClick={() => setShowNotif(true)}>
+          <span className="nav-icon">🔔</span> Notifications
+        </button>
+      </nav>
+
+      <div className="sidebar-footer">
+        <div style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Récompense</p>
+          <p style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>🎁 {commercant.reward_desc || '—'}</p>
+          <p style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{commercant.pts_par_passage} pt/passage · seuil {commercant.seuil_reward} pts</p>
+        </div>
+        <button className="nav-item" onClick={logout} style={{ color: 'var(--danger)' }}>
+          <span className="nav-icon">⏻</span> Déconnexion
+        </button>
+      </div>
+    </aside>
+  )
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
-      {/* Header */}
-      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700 }}>
-            {commercant.emoji} {commercant.nom_enseigne}
-          </h1>
-          <p style={{ color: '#666', fontSize: 13 }}>{commercant.type_activite} · {clients.length} client(s)</p>
-        </div>
-        <div className="dashboard-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button className="btn btn-success" onClick={() => setShowScanner(true)}>📷 Scanner</button>
-          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Client</button>
-          <button className="btn btn-outline" onClick={() => setShowQR(true)}>📱 QR</button>
-          <button className="btn btn-outline" onClick={() => setShowNotif(true)}>🔔</button>
-          <Link to="/stats" style={{ padding: '10px 14px', background: 'white', color: '#6c63ff', border: '2px solid #6c63ff', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>📊</Link>
-          <button className="btn btn-outline" onClick={logout}>⏻</button>
-        </div>
-      </div>
+    <div className="app-layout">
+      <Sidebar />
 
-      {/* Flash message */}
-      {msg && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 16px', marginBottom: 16, fontSize: 14 }}>
-          {msg}
-        </div>
+      {/* Mobile sidebar */}
+      {mobileSidebar && (
+        <>
+          <div className="mobile-overlay" onClick={() => setMobileSidebar(false)} />
+          <aside className="sidebar mobile-open"><Sidebar /></aside>
+        </>
       )}
 
-      {/* Récompense info */}
-      <div className="card" style={{ marginBottom: 20, background: commercant.couleur || '#6c63ff', color: 'white' }}>
-        <p style={{ fontSize: 13, opacity: 0.85 }}>Récompense</p>
-        <p style={{ fontWeight: 700, fontSize: 16, marginTop: 4 }}>🎁 {commercant.reward_desc || 'Non définie'}</p>
-        <p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>{commercant.pts_par_passage} pt/passage · seuil : {commercant.seuil_reward} pts</p>
-      </div>
-
-      {/* Clients list */}
-      {clients.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', color: '#999', padding: 48 }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>👥</p>
-          <p>Aucun client pour l'instant</p>
-          <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowAdd(true)}>Ajouter le premier</button>
+      <main className="main-content">
+        {/* Header */}
+        <div className="page-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-ghost btn-icon" style={{ display: 'none' }} onClick={() => setMobileSidebar(true)}>☰</button>
+            <h1 className="page-title">Clients</h1>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowScanner(true)}>
+              📷 Scanner QR
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>
+              + Nouveau client
+            </button>
+          </div>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {clients.map(c => (
-            <div key={c.id} className="card client-row" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: commercant.couleur || '#6c63ff',
-                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: 16, flexShrink: 0 }}>
-                {(c.prenom?.[0] || '?').toUpperCase()}
+
+        {/* Body */}
+        <div className="page-body">
+
+          {/* Stats rapides */}
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 24 }}>
+            {[
+              { label: 'Total clients', value: clients.length, icon: '👥', color: 'var(--primary)' },
+              { label: 'Points distribués', value: clients.reduce((s, c) => s + c.points, 0), icon: '⭐', color: 'var(--warning)' },
+              { label: 'Récompenses dispo', value: clients.filter(c => c.points >= (commercant.seuil_reward || 10)).length, icon: '🎁', color: 'var(--success)' },
+              { label: 'Seuil récompense', value: `${commercant.seuil_reward} pts`, icon: '🏆', color: '#8b5cf6' },
+            ].map(({ label, value, icon, color }) => (
+              <div key={label} className="stat-card">
+                <div className="stat-icon">{icon}</div>
+                <div className="stat-value" style={{ color }}>{value}</div>
+                <div className="stat-label">{label}</div>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: 600 }}>{c.prenom} {c.nom}</p>
-                <p style={{ fontSize: 12, color: '#888' }}>{c.id} · {c.telephone || c.email || '—'}</p>
-                <div style={{ marginTop: 6, background: '#f0f0f0', borderRadius: 99, height: 6, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progress(c.points)}%`, background: commercant.couleur || '#6c63ff', borderRadius: 99, transition: 'width 0.3s' }} />
-                </div>
-                <p style={{ fontSize: 11, color: '#888', marginTop: 3 }}>{c.points} / {commercant.seuil_reward} pts</p>
-              </div>
-              <div className="client-row-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                <button className="btn btn-success" style={{ padding: '8px 14px', fontSize: 13 }}
-                  onClick={() => { setShowScan(c); setScanNote('') }}>
-                  Scanner
-                </button>
-                <a href={`https://fidelite-dashboard-kohl.vercel.app/carte/${c.id}`} target="_blank" rel="noreferrer"
-                  style={{ padding: '8px 14px', fontSize: 13, background: '#f0eeff', color: '#6c63ff',
-                    border: 'none', borderRadius: 8, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                  Carte
-                </a>
-                {c.points >= (commercant.seuil_reward || 10) && (
-                  <button className="btn" style={{ padding: '8px 12px', fontSize: 13, background: '#f59e0b', color: 'white' }}
-                    onClick={() => resetPoints(c.id)} title="Valider récompense et remettre à 0">
-                    🎁
-                  </button>
-                )}
-                <button className="btn btn-danger" style={{ padding: '8px 12px', fontSize: 13 }}
-                  onClick={() => deleteClient(c.id)}>
-                  🗑️
-                </button>
-              </div>
+            ))}
+          </div>
+
+          {/* Table clients */}
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: 15, fontWeight: 600 }}>Liste des clients</h2>
+              <span className="badge badge-primary">{clients.length} client{clients.length > 1 ? 's' : ''}</span>
             </div>
-          ))}
+
+            {clients.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: 40, marginBottom: 12 }}>👥</p>
+                <p style={{ fontWeight: 500, marginBottom: 4 }}>Aucun client pour l'instant</p>
+                <p style={{ fontSize: 13, marginBottom: 20 }}>Partagez votre QR code pour que vos clients s'inscrivent</p>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowQR(true)}>📱 Voir le QR code</button>
+              </div>
+            ) : (
+              <table className="client-table">
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Contact</th>
+                    <th>Points</th>
+                    <th>Progression</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.map(c => (
+                    <tr key={c.id}>
+                      <td data-label="Client">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div className="client-avatar" style={{ background: commercant.couleur || 'var(--primary)' }}>
+                            {(c.prenom?.[0] || '?').toUpperCase()}
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: 500 }}>{c.prenom} {c.nom}</p>
+                            <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{c.id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td data-label="Contact" style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        {c.telephone || c.email || '—'}
+                      </td>
+                      <td data-label="Points">
+                        <span style={{ fontWeight: 600 }}>{c.points}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}> / {commercant.seuil_reward}</span>
+                        {c.points >= (commercant.seuil_reward || 10) && (
+                          <span className="badge badge-warning" style={{ marginLeft: 8 }}>Récompense</span>
+                        )}
+                      </td>
+                      <td data-label="Progression">
+                        <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: `${progress(c.points)}%`, background: commercant.couleur || 'var(--primary)' }} />
+                        </div>
+                      </td>
+                      <td data-label="Actions" style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-success btn-sm" onClick={() => { setShowScan(c); setScanNote('') }}>
+                            + Points
+                          </button>
+                          <a href={`https://fidelite-dashboard-kohl.vercel.app/carte/${c.id}`} target="_blank" rel="noreferrer"
+                            className="btn btn-outline btn-sm">
+                            Carte
+                          </a>
+                          {c.points >= (commercant.seuil_reward || 10) && (
+                            <button className="btn btn-warning btn-sm" onClick={() => resetPoints(c.id)} title="Valider récompense">
+                              🎁
+                            </button>
+                          )}
+                          <button className="btn btn-ghost btn-sm" onClick={() => deleteClient(c.id)} style={{ color: 'var(--danger)' }}>
+                            🗑
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      )}
+      </main>
+
+      {/* Flash */}
+      {flash && <div className="flash">{flash}</div>}
+
+      {/* Scanner QR */}
+      {showScanner && <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />}
 
       {/* Modal Ajouter client */}
       {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
-          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
-            <h3 style={{ marginBottom: 20 }}>Nouveau client</h3>
-            <form onSubmit={addClient} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input placeholder="Prénom *" value={newClient.prenom} onChange={e => setNewClient({ ...newClient, prenom: e.target.value })} required />
-              <input placeholder="Nom" value={newClient.nom} onChange={e => setNewClient({ ...newClient, nom: e.target.value })} />
-              <input placeholder="Téléphone" value={newClient.telephone} onChange={e => setNewClient({ ...newClient, telephone: e.target.value })} />
-              <input type="email" placeholder="Email" value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} />
-              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                <button className="btn btn-primary" type="submit" disabled={loading} style={{ flex: 1 }}>
-                  {loading ? '...' : 'Créer'}
-                </button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowAdd(false)} style={{ flex: 1 }}>
-                  Annuler
-                </button>
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title">Nouveau client</h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowAdd(false)}>✕</button>
+            </div>
+            <form onSubmit={addClient}>
+              <div className="modal-body">
+                <div>
+                  <label className="label">Prénom *</label>
+                  <input placeholder="Jean" value={newClient.prenom} onChange={e => setNewClient({ ...newClient, prenom: e.target.value })} required />
+                </div>
+                <div>
+                  <label className="label">Nom</label>
+                  <input placeholder="Dupont" value={newClient.nom} onChange={e => setNewClient({ ...newClient, nom: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Téléphone</label>
+                  <input placeholder="06 12 34 56 78" value={newClient.telephone} onChange={e => setNewClient({ ...newClient, telephone: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Email</label>
+                  <input type="email" placeholder="jean@email.com" value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowAdd(false)}>Annuler</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Création...' : 'Créer le client'}</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Scanner QR */}
-      {showScanner && (
-        <QRScanner
-          onScan={handleQRScan}
-          onClose={() => setShowScanner(false)}
-        />
+      {/* Modal Scanner points */}
+      {showScan && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title">Ajouter un passage</h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowScan(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: 'var(--bg)', borderRadius: 10 }}>
+                <div className="client-avatar" style={{ background: commercant.couleur || 'var(--primary)', width: 44, height: 44 }}>
+                  {(showScan.prenom?.[0] || '?').toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ fontWeight: 600 }}>{showScan.prenom} {showScan.nom}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{showScan.points} pts actuels</p>
+                </div>
+                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                  <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--primary)' }}>+{commercant.pts_par_passage}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>point(s)</p>
+                </div>
+              </div>
+              <div>
+                <label className="label">Note (optionnel)</label>
+                <input placeholder="Ex: menu du jour, café..." value={scanNote} onChange={e => setScanNote(e.target.value)} />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowScan(null)}>Annuler</button>
+              <button className="btn btn-success" disabled={loading} onClick={() => scan(showScan.id)}>
+                {loading ? '...' : `✓ Valider +${commercant.pts_par_passage} pt`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR Code enseigne */}
+      {showQR && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title">QR Code d'inscription</h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowQR(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ alignItems: 'center', textAlign: 'center' }}>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+                Vos clients scannent ce code pour créer leur carte de fidélité
+              </p>
+              <div style={{ padding: 20, background: 'var(--bg)', borderRadius: 16, border: '2px solid var(--border)' }}>
+                <QRCodeSVG value={`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`} size={200} fgColor={commercant.couleur || 'var(--primary)'} />
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                fidelite-dashboard-kohl.vercel.app/inscription/{commercant.id?.slice(0, 8)}...
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowQR(false)}>Fermer</button>
+              <button className="btn btn-primary" onClick={() => window.open(`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`, '_blank')}>
+                Ouvrir la page
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal Notification */}
       {showNotif && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
-          <div className="card" style={{ width: '100%', maxWidth: 400 }}>
-            <h3 style={{ marginBottom: 16 }}>🔔 Envoyer une notification</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input
-                placeholder="Titre (ex: Offre spéciale 🎉)"
-                value={notifForm.title}
-                onChange={e => setNotifForm({ ...notifForm, title: e.target.value })}
-              />
-              <textarea
-                placeholder="Message (ex: -20% ce weekend sur tout le menu !)"
-                value={notifForm.body}
-                onChange={e => setNotifForm({ ...notifForm, body: e.target.value })}
-                rows={3}
-                style={{ padding: '10px 14px', border: '1.5px solid #ddd', borderRadius: 8, fontSize: 14, resize: 'vertical', fontFamily: 'inherit' }}
-              />
-              <select
-                value={notifForm.client_id}
-                onChange={e => setNotifForm({ ...notifForm, client_id: e.target.value })}
-              >
-                <option value="">Tous les clients</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.prenom} {c.nom} — {c.id}</option>
-                ))}
-              </select>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} disabled={loading || !notifForm.title || !notifForm.body}
-                  onClick={async () => {
-                    setLoading(true)
-                    try {
-                      const payload = { title: notifForm.title, body: notifForm.body }
-                      if (notifForm.client_id) payload.client_id = notifForm.client_id
-                      const { data } = await api.post('/notifications/send', payload)
-                      setShowNotif(false)
-                      setNotifForm({ title: '', body: '', client_id: '' })
-                      flash(`✅ Notification envoyée à ${data.sent} client(s)`)
-                    } catch (err) {
-                      flash('❌ ' + (err.response?.data?.error || 'Erreur'))
-                    }
-                    setLoading(false)
-                  }}>
-                  {loading ? '...' : 'Envoyer'}
-                </button>
-                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowNotif(false)}>Annuler</button>
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title">Envoyer une notification</h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowNotif(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div>
+                <label className="label">Titre</label>
+                <input placeholder="Ex: Offre spéciale ce weekend 🎉" value={notifForm.title} onChange={e => setNotifForm({ ...notifForm, title: e.target.value })} />
+              </div>
+              <div>
+                <label className="label">Message</label>
+                <textarea placeholder="Ex: -20% sur tout le menu jusqu'à dimanche !" value={notifForm.body} onChange={e => setNotifForm({ ...notifForm, body: e.target.value })} rows={3} />
+              </div>
+              <div>
+                <label className="label">Destinataire</label>
+                <select value={notifForm.client_id} onChange={e => setNotifForm({ ...notifForm, client_id: e.target.value })}>
+                  <option value="">Tous les clients</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.prenom} {c.nom} — {c.id}</option>)}
+                </select>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal QR Code */}
-      {showQR && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
-          <div className="card" style={{ width: 360, textAlign: 'center' }}>
-            <h3 style={{ marginBottom: 8 }}>📱 QR Code inscription</h3>
-            <p style={{ color: '#666', fontSize: 13, marginBottom: 20 }}>
-              Tes clients scannent ce QR code pour s'inscrire et obtenir leur carte automatiquement
-            </p>
-            <div style={{ display: 'inline-block', padding: 16, background: 'white', borderRadius: 12, border: '2px solid #f0f0f0' }}>
-              <QRCodeSVG
-                value={`${window.location.origin}/inscription/${commercant.id}`}
-                size={200}
-                fgColor={commercant.couleur || '#6c63ff'}
-              />
-            </div>
-            <p style={{ fontSize: 11, color: '#aaa', marginTop: 12, wordBreak: 'break-all' }}>
-              {window.location.origin}/inscription/{commercant.id}
-            </p>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => window.open(`${window.location.origin}/inscription/${commercant.id}`, '_blank')}>
-                Ouvrir la page
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowNotif(false)}>Annuler</button>
+              <button className="btn btn-primary" disabled={loading || !notifForm.title || !notifForm.body} onClick={sendNotif}>
+                {loading ? 'Envoi...' : 'Envoyer'}
               </button>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowQR(false)}>Fermer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Scanner */}
-      {showScan && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '0 16px' }}>
-          <div className="card" style={{ width: 360, textAlign: 'center' }}>
-            <p style={{ fontSize: 48, marginBottom: 8 }}>📲</p>
-            <h3>Scanner un passage</h3>
-            <p style={{ color: '#666', fontSize: 14, margin: '8px 0 16px' }}>
-              {showScan.prenom} {showScan.nom} · {showScan.points} pts actuels
-            </p>
-            <input placeholder="Note (optionnel)" value={scanNote} onChange={e => setScanNote(e.target.value)} style={{ marginBottom: 16 }} />
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-success" style={{ flex: 1 }} disabled={loading} onClick={() => scan(showScan.id)}>
-                {loading ? '...' : `+${commercant.pts_par_passage} point(s)`}
-              </button>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowScan(null)}>Annuler</button>
             </div>
           </div>
         </div>
