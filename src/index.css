@@ -304,6 +304,35 @@ input::placeholder { color: #9ca3af; }
   .stat-value { font-size: 22px; }
   .modal { max-width: 100%; border-radius: 16px 16px 0 0; }
   .modal-backdrop { align-items: flex-end; }
+  /* Bottom nav mobile */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 8px 0 12px;
+  }
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-decoration: none;
+    padding: 4px 0;
+  }
+  .mobile-nav-item.active { color: var(--primary); }
+  .mobile-nav-item span:first-child { font-size: 20px; }
+  .main-content { padding-bottom: 70px; }
+
   /* Table → cards on mobile */
   .client-table thead { display: none; }
   .client-table tr {

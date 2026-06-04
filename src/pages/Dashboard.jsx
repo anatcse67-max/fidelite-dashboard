@@ -279,6 +279,25 @@ export default function Dashboard() {
       {/* Flash */}
       {flash && <div className="flash">{flash}</div>}
 
+      {/* Mobile bottom nav */}
+      <nav style={{ display: 'none' }} className="mobile-bottom-nav">
+        <Link to="/dashboard" className="mobile-nav-item active">
+          <span>👥</span><span>Clients</span>
+        </Link>
+        <Link to="/stats" className="mobile-nav-item">
+          <span>📊</span><span>Stats</span>
+        </Link>
+        <button className="mobile-nav-item" onClick={() => setShowScanner(true)}>
+          <span>📷</span><span>Scanner</span>
+        </button>
+        <button className="mobile-nav-item" onClick={() => setShowNotif(true)}>
+          <span>🔔</span><span>Notifs</span>
+        </button>
+        <button className="mobile-nav-item" onClick={() => setShowQR(true)}>
+          <span>📱</span><span>QR Code</span>
+        </button>
+      </nav>
+
       {/* Scanner QR */}
       {showScanner && <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />}
 
