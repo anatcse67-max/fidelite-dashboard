@@ -65,7 +65,7 @@ export default function QRScanner({ onScan, onClose }) {
       {/* Header */}
       <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ color: 'white', fontSize: 17, fontWeight: 600 }}>📷 Scanner une carte</h3>
-        <button onClick={onClose} style={{
+        <button onClick={() => { scannerRef.current?.stop().catch(()=>{}); onClose(); }} style={{
           background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white',
           borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 14, fontWeight: 500
         }}>
@@ -117,11 +117,11 @@ export default function QRScanner({ onScan, onClose }) {
               }}>
                 📷 Scanner suivant
               </button>
-              <button onClick={onClose} style={{
+              <button onClick={() => { setLastScan(null); scannerRef.current?.stop().catch(()=>{}); onClose(); }} style={{
                 background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
                 borderRadius: 10, padding: '12px 24px', fontSize: 15, fontWeight: 600, cursor: 'pointer'
               }}>
-                Retour
+                ← Retour
               </button>
             </div>
           </div>
