@@ -84,29 +84,57 @@ export default function Carte() {
     <div style={{ minHeight: '100vh', background: '#f5f5f5', padding: '24px 16px' }}>
       <div style={{ maxWidth: 400, margin: '0 auto' }}>
 
-        {/* Carte */}
+        {/* Carte améliorée */}
         <div style={{
-          background: commercant.couleur || '#6c63ff', borderRadius: 24, padding: 28,
-          color: 'white', marginBottom: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
+          background: `linear-gradient(135deg, ${commercant.couleur || '#4f46e5'}, ${commercant.couleur || '#4f46e5'}99)`,
+          borderRadius: 24, padding: 28, color: 'white', marginBottom: 16,
+          boxShadow: `0 20px 60px ${commercant.couleur || '#4f46e5'}40`,
+          position: 'relative', overflow: 'hidden'
         }}>
-          <p style={{ fontSize: 44, marginBottom: 4 }}>{commercant.emoji}</p>
-          <p style={{ opacity: 0.8, fontSize: 11, textTransform: 'uppercase', letterSpacing: 2 }}>{commercant.nom_enseigne}</p>
-          <p style={{ fontSize: 22, fontWeight: 800, marginTop: 10 }}>{client.prenom} {client.nom}</p>
-          <p style={{ fontSize: 13, opacity: 0.6, letterSpacing: 3, marginBottom: 20 }}>{client.id}</p>
+          {/* Cercles décoratifs */}
+          <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
+          <div style={{ position: 'absolute', bottom: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
 
-          <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 99, height: 8, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: 'white', borderRadius: 99, transition: 'width 0.5s' }} />
-          </div>
-          <p style={{ fontSize: 12, opacity: 0.8, marginTop: 6, textAlign: 'right' }}>
-            {client.points} / {commercant.seuil_reward} pts
-          </p>
-
-          {rewardReached && (
-            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 12, padding: '10px 14px', marginTop: 12, textAlign: 'center' }}>
-              <p style={{ fontWeight: 700 }}>🎁 Récompense disponible !</p>
-              <p style={{ fontSize: 13, opacity: 0.9, marginTop: 2 }}>{commercant.reward_desc}</p>
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <p style={{ fontSize: 36 }}>{commercant.emoji}</p>
+                <p style={{ opacity: 0.85, fontSize: 12, textTransform: 'uppercase', letterSpacing: 2, marginTop: 4, fontWeight: 600 }}>{commercant.nom_enseigne}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 28, fontWeight: 800 }}>{client.points}</p>
+                <p style={{ fontSize: 11, opacity: 0.75 }}>/ {commercant.seuil_reward} pts</p>
+              </div>
             </div>
-          )}
+
+            <p style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.5px' }}>{client.prenom} {client.nom}</p>
+            <p style={{ fontSize: 12, opacity: 0.5, letterSpacing: 3, marginTop: 2, marginBottom: 16 }}>{client.id}</p>
+
+            {/* Barre de progression avec points */}
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                {Array.from({ length: commercant.seuil_reward }, (_, i) => (
+                  <div key={i} style={{
+                    width: `${Math.floor(92 / commercant.seuil_reward)}%`,
+                    height: 6, borderRadius: 99,
+                    background: i < client.points ? 'white' : 'rgba(255,255,255,0.25)',
+                    transition: 'background 0.3s'
+                  }} />
+                ))}
+              </div>
+            </div>
+            <p style={{ fontSize: 11, opacity: 0.7, textAlign: 'right' }}>
+              {commercant.seuil_reward - client.points > 0
+                ? `Plus que ${commercant.seuil_reward - client.points} passage${commercant.seuil_reward - client.points > 1 ? 's' : ''} pour la récompense`
+                : '🎉 Récompense débloquée !'}
+            </p>
+
+            {rewardReached && (
+              <div style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: 12, padding: '10px 14px', marginTop: 12, textAlign: 'center', border: '1px solid rgba(255,255,255,0.3)' }}>
+                <p style={{ fontWeight: 700, fontSize: 15 }}>🎁 {commercant.reward_desc}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Récompense */}

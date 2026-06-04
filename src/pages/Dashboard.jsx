@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import QRScanner from '../components/QRScanner'
+import { useDarkMode } from '../hooks/useDarkMode'
 import api from '../api'
 
 export default function Dashboard() {
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   const commercant = JSON.parse(localStorage.getItem('commercant') || '{}')
+  const [dark, setDark] = useDarkMode()
 
   useEffect(() => { fetchClients() }, [])
 
@@ -144,14 +146,18 @@ export default function Dashboard() {
         <button className="nav-item" onClick={() => setShowNotif(true)}>
           <span className="nav-icon">🔔</span> Notifications
         </button>
+        <Link to="/profile" className="nav-item">
+          <span className="nav-icon">⚙️</span> Mon profil
+        </Link>
+        <button className="nav-item" onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/clients/export`} >
+          <span className="nav-icon">📥</span> Export CSV
+        </button>
       </nav>
 
       <div className="sidebar-footer">
-        <div style={{ padding: '10px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 8 }}>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Récompense</p>
-          <p style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>🎁 {commercant.reward_desc || '—'}</p>
-          <p style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{commercant.pts_par_passage} pt/passage · seuil {commercant.seuil_reward} pts</p>
-        </div>
+        <button className="nav-item" onClick={() => setDark(!dark)} style={{ marginBottom: 4 }}>
+          <span className="nav-icon">{dark ? '☀️' : '🌙'}</span> {dark ? 'Mode clair' : 'Mode sombre'}
+        </button>
         <button className="nav-item" onClick={logout} style={{ color: 'var(--danger)' }}>
           <span className="nav-icon">⏻</span> Déconnexion
         </button>
@@ -235,6 +241,7 @@ export default function Dashboard() {
                   <tr>
                     <th>Client</th>
                     <th>Contact</th>
+                    <th>Passages</th>
                     <th>Points</th>
                     <th>Progression</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
@@ -256,6 +263,9 @@ export default function Dashboard() {
                       </td>
                       <td data-label="Contact" style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
                         {c.telephone || c.email || '—'}
+                      </td>
+                      <td data-label="Passages" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                        {c.nb_passages || 0} passage{c.nb_passages > 1 ? 's' : ''}
                       </td>
                       <td data-label="Points">
                         <span style={{ fontWeight: 600 }}>{c.points}</span>
