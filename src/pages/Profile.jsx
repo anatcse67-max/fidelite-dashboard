@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api'
 
@@ -17,12 +17,42 @@ export default function Profile() {
     seuil_reward: saved.seuil_reward || 10,
     reward_desc: saved.reward_desc || ''
   })
+  const [iconUrl, setIconUrl] = useState(saved.icon_url || null)
+  const [iconPreview, setIconPreview] = useState(null)
+  const [iconFile, setIconFile] = useState(null)
+  const [iconLoading, setIconLoading] = useState(false)
+  const fileInputRef = useRef(null)
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm: '' })
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const onIconChange = e => {
+    const file = e.target.files[0]
+    if (!file) return
+    setIconFile(file)
+    setIconPreview(URL.createObjectURL(file))
+  }
+
+  const uploadIcon = async () => {
+    if (!iconFile) return
+    setIconLoading(true); setErr(''); setMsg('')
+    try {
+      const formData = new FormData()
+      formData.append('icon', iconFile)
+      const { data } = await api.post('/auth/upload-icon', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      localStorage.setItem('commercant', JSON.stringify(data.commercant))
+      setIconUrl(data.icon_url)
+      setIconPreview(null)
+      setIconFile(null)
+      setMsg('✓ Icône mise à jour')
+    } catch (e) { setErr(e.response?.data?.error || 'Erreur upload') }
+    setIconLoading(false)
+  }
 
   const saveProfile = async e => {
     e.preventDefault()
@@ -52,8 +82,11 @@ export default function Profile() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: form.couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-              {form.emoji}
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: form.couleur, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, overflow: 'hidden' }}>
+              {iconUrl
+                ? <img src={iconUrl} alt="icône" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : form.emoji
+              }
             </div>
             <div>
               <div className="sidebar-logo">{form.nom_enseigne}</div>
@@ -82,6 +115,46 @@ export default function Profile() {
           <div className="card" style={{ marginBottom: 20 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Informations de l'enseigne</h2>
             <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Icône personnalisée */}
+              <div>
+                <label className="label">Icône du dashboard</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div
+                    onClick={() => fileInputRef.current.click()}
+                    style={{
+                      width: 72, height: 72, borderRadius: 16,
+                      background: iconPreview || iconUrl ? 'transparent' : form.couleur,
+                      border: '2px dashed #d1d5db', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden', flexShrink: 0
+                    }}
+                  >
+                    {iconPreview || iconUrl
+                      ? <img src={iconPreview || iconUrl} alt="icône" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ fontSize: 28 }}>{form.emoji}</span>
+                    }
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <button type="button" onClick={() => fileInputRef.current.click()}
+                      className="btn btn-outline btn-sm">
+                      📁 Choisir une image
+                    </button>
+                    {iconFile && (
+                      <button type="button" onClick={uploadIcon} disabled={iconLoading}
+                        className="btn btn-primary btn-sm">
+                        {iconLoading ? 'Envoi...' : '✓ Valider l\'icône'}
+                      </button>
+                    )}
+                    {iconUrl && !iconFile && (
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>Image personnalisée active</span>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onIconChange} />
+                </div>
+                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>JPG, PNG, WEBP — 2 Mo max</p>
+              </div>
+
               <div>
                 <label className="label">Nom de l'enseigne</label>
                 <input value={form.nom_enseigne} onChange={e => set('nom_enseigne', e.target.value)} required />
