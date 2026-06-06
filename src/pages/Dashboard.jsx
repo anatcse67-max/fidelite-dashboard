@@ -25,10 +25,17 @@ export default function Dashboard() {
   const [flash, setFlash] = useState('')
   const navigate = useNavigate()
 
-  const commercant = JSON.parse(localStorage.getItem('commercant') || '{}')
+  const [commercant, setCommercant] = useState(JSON.parse(localStorage.getItem('commercant') || '{}'))
   const [dark, setDark] = useDarkMode()
 
-  useEffect(() => { fetchClients() }, [])
+  useEffect(() => {
+    fetchClients()
+    // Recharger les infos commerçant depuis l'API pour avoir les derniers paramètres
+    api.get('/auth/me').then(r => {
+      localStorage.setItem('commercant', JSON.stringify(r.data.commercant))
+      setCommercant(r.data.commercant)
+    }).catch(() => {})
+  }, [])
 
   const fetchClients = async () => {
     try {
