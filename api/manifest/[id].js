@@ -1,20 +1,49 @@
 export default async function handler(req, res) {
   const { id } = req.query
   const origin = `https://${req.headers.host}`
+  const apiUrl = process.env.VITE_API_URL || 'https://fidelite-backend-production.up.railway.app'
 
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Access-Control-Allow-Origin', '*')
 
-  res.json({
-    name: 'Ma carte fidélité',
-    short_name: 'Fidélité',
-    start_url: `${origin}/carte/${id}`,
-    display: 'standalone',
-    background_color: '#6c63ff',
-    theme_color: '#6c63ff',
-    icons: [
-      { src: `${origin}/icon-192.png`, sizes: '192x192', type: 'image/png' },
-      { src: `${origin}/icon-512.png`, sizes: '512x512', type: 'image/png' }
-    ]
-  })
+  try {
+    const response = await fetch(`${apiUrl}/carte/${id}`)
+    const data = await response.json()
+
+    const { client, commercant } = data
+
+    const icons = commercant?.icon_url
+      ? [
+          { src: commercant.icon_url, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: commercant.icon_url, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+        ]
+      : [
+          { src: `${origin}/icon-192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${origin}/icon-512.png`, sizes: '512x512', type: 'image/png' }
+        ]
+
+    res.json({
+      name: commercant ? `${commercant.emoji} ${commercant.nom_enseigne}` : 'Ma carte fidélité',
+      short_name: commercant?.nom_enseigne || 'Fidélité',
+      start_url: `${origin}/carte/${id}`,
+      display: 'standalone',
+      background_color: commercant?.couleur || '#6c63ff',
+      theme_color: commercant?.couleur || '#6c63ff',
+      icons
+    })
+  } catch {
+    // Fallback si l'API est inaccessible
+    res.json({
+      name: 'Ma carte fidélité',
+      short_name: 'Fidélité',
+      start_url: `${origin}/carte/${id}`,
+      display: 'standalone',
+      background_color: '#6c63ff',
+      theme_color: '#6c63ff',
+      icons: [
+        { src: `${origin}/icon-192.png`, sizes: '192x192', type: 'image/png' },
+        { src: `${origin}/icon-512.png`, sizes: '512x512', type: 'image/png' }
+      ]
+    })
+  }
 }
