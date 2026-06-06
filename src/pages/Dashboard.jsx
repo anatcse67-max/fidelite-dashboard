@@ -450,6 +450,7 @@ export default function Dashboard() {
         <div className="modal-backdrop">
           <div className="modal">
             <div className="modal-header">
+              <p style={{fontSize:10,color:'#999'}}>mode: {commercant.mode_points || 'non défini'}</p>
               <h3 className="modal-title">Ajouter un passage</h3>
               <button className="btn btn-ghost btn-icon" onClick={() => setShowScan(null)}>✕</button>
             </div>
