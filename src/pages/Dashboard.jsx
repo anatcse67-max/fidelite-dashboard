@@ -134,8 +134,10 @@ export default function Dashboard() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: commercant.couleur || 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-            {commercant.emoji}
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: commercant.couleur || 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, overflow: 'hidden' }}>
+            {commercant.icon_url
+              ? <img src={commercant.icon_url} alt="icône" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : commercant.emoji}
           </div>
           <div>
             <div className="sidebar-logo">{commercant.nom_enseigne}</div>
