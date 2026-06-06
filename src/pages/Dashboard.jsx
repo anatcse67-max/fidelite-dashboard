@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [newClient, setNewClient] = useState({ prenom: '', nom: '', telephone: '', email: '' })
   const [notifForm, setNotifForm] = useState({ title: '', body: '', client_id: '' })
   const [scanNote, setScanNote] = useState('')
+  const [scanMontant, setScanMontant] = useState('')
   const [loading, setLoading] = useState(false)
   const [flash, setFlash] = useState('')
   const navigate = useNavigate()
@@ -68,7 +69,7 @@ export default function Dashboard() {
   const scan = async (id) => {
     setLoading(true)
     try {
-      const { data } = await api.post(`/clients/${id}/scan`, { note: scanNote })
+      const { data } = await api.post(`/clients/${id}/scan`, { note: scanNote, montant: scanMontant || undefined })
       setShowScan(null); setScanNote('')
       fetchClients()
       showFlash(`✓ +${data.points_ajoutes} pt — ${data.client.points} pts au total`)
@@ -459,15 +460,26 @@ export default function Dashboard() {
                   <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>point(s)</p>
                 </div>
               </div>
+              {commercant.mode_points === 'montant' && (
+                <div>
+                  <label className="label">Montant dépensé (€) *</label>
+                  <input type="number" min="0" step="0.01" placeholder="Ex: 12.50" value={scanMontant} onChange={e => setScanMontant(e.target.value)} />
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    = {scanMontant ? Math.floor(parseFloat(scanMontant) * (commercant.euro_to_points || 1)) : 0} point(s)
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="label">Note (optionnel)</label>
                 <input placeholder="Ex: menu du jour, café..." value={scanNote} onChange={e => setScanNote(e.target.value)} />
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setShowScan(null)}>Annuler</button>
-              <button className="btn btn-success" disabled={loading} onClick={() => scan(showScan.id)}>
-                {loading ? '...' : `✓ Valider +${commercant.pts_par_passage} pt`}
+              <button className="btn btn-outline" onClick={() => { setShowScan(null); setScanMontant('') }}>Annuler</button>
+              <button className="btn btn-success" disabled={loading || (commercant.mode_points === 'montant' && !scanMontant)} onClick={() => scan(showScan.id)}>
+                {loading ? '...' : commercant.mode_points === 'montant'
+                  ? `✓ Valider ${scanMontant ? `+${Math.floor(parseFloat(scanMontant) * (commercant.euro_to_points || 1))} pts` : ''}`
+                  : `✓ Valider +${commercant.pts_par_passage} pt`}
               </button>
             </div>
           </div>
