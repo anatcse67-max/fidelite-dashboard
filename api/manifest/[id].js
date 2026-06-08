@@ -5,6 +5,7 @@ export default async function handler(req, res) {
 
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
 
   try {
     const response = await fetch(`${apiUrl}/carte/${id}`)
