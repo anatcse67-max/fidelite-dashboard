@@ -84,19 +84,30 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  const handleQRScan = async (clientId) => {
-    try {
-      const { data } = await api.post(`/clients/${clientId}/scan`, { note: 'Scan QR code' })
-      fetchClients()
-      return {
-        id: clientId,
-        prenom: data.client.prenom,
-        points_ajoutes: data.points_ajoutes,
-        total: data.client.points
-      }
-    } catch (err) {
-      return { id: clientId, prenom: 'Erreur', points_ajoutes: 0, total: 0 }
+  const handleQRScan = (clientId) => {
+    // Chercher le client dans la liste déjà chargée
+    const client = clients.find(c => c.id === clientId)
+    if (client) {
+      setCommercant(JSON.parse(localStorage.getItem('commercant') || '{}'))
+      setShowScanner(false)
+      setShowScan(client)
+      setScanNote('')
+      setScanMontant('')
+    } else {
+      // Client pas encore dans la liste, recharger puis ouvrir
+      api.get('/clients').then(r => {
+        const found = r.data.find(c => c.id === clientId)
+        if (found) {
+          setClients(r.data)
+          setCommercant(JSON.parse(localStorage.getItem('commercant') || '{}'))
+          setShowScanner(false)
+          setShowScan(found)
+          setScanNote('')
+          setScanMontant('')
+        }
+      }).catch(() => {})
     }
+    return null
   }
 
   const resetPoints = async (id) => {
