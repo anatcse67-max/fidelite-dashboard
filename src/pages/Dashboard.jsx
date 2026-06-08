@@ -304,7 +304,7 @@ export default function Dashboard() {
                       </td>
                       <td data-label="Actions" style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                          <button className="btn btn-success btn-sm" onClick={() => { setShowScan(c); setScanNote('') }}>
+                          <button className="btn btn-success btn-sm" onClick={() => { setCommercant(JSON.parse(localStorage.getItem('commercant') || '{}')); setShowScan(c); setScanNote('') }}>
                             + Points
                           </button>
                           <a href={`https://fidelite-dashboard-kohl.vercel.app/carte/${c.id}`} target="_blank" rel="noreferrer"
@@ -450,7 +450,6 @@ export default function Dashboard() {
         <div className="modal-backdrop">
           <div className="modal">
             <div className="modal-header">
-              <p style={{fontSize:10,color:'#999'}}>mode: {commercant.mode_points || 'non défini'}</p>
               <h3 className="modal-title">Ajouter un passage</h3>
               <button className="btn btn-ghost btn-icon" onClick={() => setShowScan(null)}>✕</button>
             </div>
