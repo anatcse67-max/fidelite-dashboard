@@ -101,6 +101,24 @@ export default function Carte() {
   const level = getLevel(nbPassages)
   const rewardReached = client.points >= seuil
 
+  // Calcul expiration récompense
+  const rewardExpiryInfo = (() => {
+    if (!commercant.reward_expiry_days || !client.reward_unlocked_at) return null
+    const unlocked = new Date(client.reward_unlocked_at)
+    const expires = new Date(unlocked.getTime() + commercant.reward_expiry_days * 86400000)
+    const daysLeft = Math.ceil((expires - new Date()) / 86400000)
+    return { daysLeft, expired: daysLeft <= 0 }
+  })()
+
+  // Calcul expiration points (basé sur dernier passage)
+  const pointsExpiryInfo = (() => {
+    if (!commercant.points_expiry_days || !passages.length || !client.points) return null
+    const lastDate = new Date(passages[0].created_at)
+    const expires = new Date(lastDate.getTime() + commercant.points_expiry_days * 86400000)
+    const daysLeft = Math.ceil((expires - new Date()) / 86400000)
+    return { daysLeft, expireDate: expires.toLocaleDateString('fr-FR') }
+  })()
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', paddingBottom: 40 }}>
       {/* Flash */}
@@ -164,6 +182,48 @@ export default function Carte() {
             )}
           </div>
         </div>
+
+        {/* Bandeaux d'expiration */}
+        {rewardExpiryInfo && rewardReached && (
+          <div style={{
+            background: rewardExpiryInfo.daysLeft <= 7 ? '#fef2f2' : '#fffbeb',
+            border: `1px solid ${rewardExpiryInfo.daysLeft <= 7 ? '#fca5a5' : '#fde68a'}`,
+            borderRadius: 12, padding: '12px 16px', marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 10
+          }}>
+            <span style={{ fontSize: 20 }}>{rewardExpiryInfo.daysLeft <= 7 ? '🚨' : '⏰'}</span>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 14, color: rewardExpiryInfo.daysLeft <= 7 ? '#dc2626' : '#92400e', margin: 0 }}>
+                {rewardExpiryInfo.daysLeft <= 0
+                  ? 'Récompense expirée !'
+                  : `Ta récompense expire dans ${rewardExpiryInfo.daysLeft} jour${rewardExpiryInfo.daysLeft > 1 ? 's' : ''}`}
+              </p>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                {rewardExpiryInfo.daysLeft <= 0
+                  ? 'Elle sera remise à zéro au prochain scan.'
+                  : 'Viens vite l\'utiliser !'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {pointsExpiryInfo && pointsExpiryInfo.daysLeft <= 30 && (
+          <div style={{
+            background: '#eff6ff', border: '1px solid #bfdbfe',
+            borderRadius: 12, padding: '12px 16px', marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 10
+          }}>
+            <span style={{ fontSize: 20 }}>📅</span>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 14, color: '#1d4ed8', margin: 0 }}>
+                Tes points expirent dans {pointsExpiryInfo.daysLeft} jour{pointsExpiryInfo.daysLeft > 1 ? 's' : ''}
+              </p>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                Reviens avant le {pointsExpiryInfo.expireDate} pour ne pas les perdre
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Paliers de récompenses */}
         {paliers?.length > 0 && (

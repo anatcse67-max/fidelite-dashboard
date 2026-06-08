@@ -21,6 +21,8 @@ export default function Profile() {
     parrainage_actif: saved.parrainage_actif || false,
     parrainage_points: saved.parrainage_points || 5,
     parrainage_nb_min: saved.parrainage_nb_min || 1,
+    reward_expiry_days: saved.reward_expiry_days || '',
+    points_expiry_days: saved.points_expiry_days || '',
   })
   const [paliers, setPaliers] = useState([])
   const [newPalier, setNewPalier] = useState({ points_requis: '', description: '', type: 'texte', valeur: '' })
@@ -268,6 +270,32 @@ export default function Profile() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Limites & expiration */}
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 16 }}>
+                <label className="label">⏰ Limites de temps (optionnel)</label>
+                <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>Laisse vide pour désactiver. Les points ou récompenses expirés sont remis à zéro automatiquement au prochain scan.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label className="label">Expiration récompense (jours)</label>
+                    <input
+                      type="number" min="1" placeholder="Ex: 30 (laisser vide = illimité)"
+                      value={form.reward_expiry_days}
+                      onChange={e => set('reward_expiry_days', e.target.value ? parseInt(e.target.value) : '')}
+                    />
+                    <p style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>Après avoir atteint le seuil, le client a X jours pour utiliser sa récompense</p>
+                  </div>
+                  <div>
+                    <label className="label">Expiration points inactivité (jours)</label>
+                    <input
+                      type="number" min="1" placeholder="Ex: 180 (laisser vide = illimité)"
+                      value={form.points_expiry_days}
+                      onChange={e => set('points_expiry_days', e.target.value ? parseInt(e.target.value) : '')}
+                    />
+                    <p style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>Si le client ne vient pas pendant X jours, ses points sont remis à zéro</p>
+                  </div>
+                </div>
               </div>
 
               <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Enregistrement...' : 'Enregistrer les modifications'}</button>
