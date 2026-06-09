@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [showScan, setShowScan] = useState(null)
   const [showQR, setShowQR] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
+  const [showPrint, setShowPrint] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [mobileSidebar, setMobileSidebar] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
@@ -176,6 +177,9 @@ export default function Dashboard() {
         </Link>
         <button className="nav-item" onClick={() => setShowQR(true)}>
           <span className="nav-icon">📱</span> QR Code enseigne
+        </button>
+        <button className="nav-item" onClick={() => setShowPrint(true)}>
+          <span className="nav-icon">🖨️</span> Affiche imprimable
         </button>
         <button className="nav-item" onClick={() => setShowNotif(true)}>
           <span className="nav-icon">🔔</span> Notifications
@@ -527,6 +531,101 @@ export default function Dashboard() {
               <button className="btn btn-outline" onClick={() => setShowQR(false)}>Fermer</button>
               <button className="btn btn-primary" onClick={() => window.open(`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`, '_blank')}>
                 Ouvrir la page
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Affiche imprimable */}
+      {showPrint && (
+        <div className="modal-backdrop">
+          <div className="modal" style={{ maxWidth: 520 }}>
+            <div className="modal-header">
+              <h3 className="modal-title">🖨️ Affiche imprimable</h3>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowPrint(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ alignItems: 'center' }}>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', marginBottom: 16 }}>
+                Aperçu de l'affiche — cliquez "Imprimer" pour l'imprimer ou la sauvegarder en PDF
+              </p>
+
+              {/* Affiche preview */}
+              <div id="affiche-print" style={{
+                width: 340, background: 'white', borderRadius: 20, overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb'
+              }}>
+                {/* Header coloré */}
+                <div style={{ background: commercant.couleur || '#4f46e5', padding: '32px 24px 24px', textAlign: 'center', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                  <div style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                  {commercant.icon_url
+                    ? <img src={commercant.icon_url} alt="logo" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.5)', marginBottom: 12 }} />
+                    : <div style={{ fontSize: 56, marginBottom: 8 }}>{commercant.emoji}</div>
+                  }
+                  <h2 style={{ color: 'white', fontSize: 22, fontWeight: 800, margin: 0 }}>{commercant.nom_enseigne}</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 }}>{commercant.type_activite}</p>
+                </div>
+
+                {/* Corps */}
+                <div style={{ padding: '24px', textAlign: 'center' }}>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: '#111', marginBottom: 4 }}>
+                    🎁 Carte de fidélité gratuite
+                  </p>
+                  <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+                    Scannez ce QR code avec votre téléphone pour créer votre carte et commencer à gagner des points !
+                  </p>
+
+                  {/* QR Code */}
+                  <div style={{ display: 'inline-block', padding: 14, background: 'white', borderRadius: 16, border: `3px solid ${commercant.couleur || '#4f46e5'}`, marginBottom: 16 }}>
+                    <QRCodeSVG
+                      value={`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`}
+                      size={160}
+                      fgColor={commercant.couleur || '#4f46e5'}
+                    />
+                  </div>
+
+                  {/* Récompense */}
+                  {commercant.reward_desc && (
+                    <div style={{ background: `${commercant.couleur || '#4f46e5'}15`, border: `1px solid ${commercant.couleur || '#4f46e5'}40`, borderRadius: 10, padding: '10px 16px', marginBottom: 16 }}>
+                      <p style={{ fontSize: 13, color: commercant.couleur || '#4f46e5', fontWeight: 700, margin: 0 }}>
+                        🏆 {commercant.seuil_reward} points = {commercant.reward_desc}
+                      </p>
+                    </div>
+                  )}
+
+                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 8 }}>
+                    fidelite-dashboard-kohl.vercel.app
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowPrint(false)}>Fermer</button>
+              <button className="btn btn-primary" onClick={() => {
+                const style = document.createElement('style')
+                style.id = 'print-style'
+                style.innerHTML = `
+                  @media print {
+                    body > * { display: none !important; }
+                    #affiche-print-wrapper { display: flex !important; justify-content: center; align-items: center; min-height: 100vh; }
+                    #affiche-print { box-shadow: none !important; border: none !important; }
+                  }
+                `
+                document.head.appendChild(style)
+                const wrapper = document.createElement('div')
+                wrapper.id = 'affiche-print-wrapper'
+                wrapper.style.display = 'none'
+                const clone = document.getElementById('affiche-print').cloneNode(true)
+                wrapper.appendChild(clone)
+                document.body.appendChild(wrapper)
+                window.print()
+                setTimeout(() => {
+                  document.getElementById('print-style')?.remove()
+                  document.getElementById('affiche-print-wrapper')?.remove()
+                }, 1000)
+              }}>
+                🖨️ Imprimer / Sauvegarder PDF
               </button>
             </div>
           </div>
