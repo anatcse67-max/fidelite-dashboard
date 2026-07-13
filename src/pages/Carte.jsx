@@ -94,10 +94,10 @@ export default function Carte() {
     </div>
   )
 
-  const { client, commercant, passages, paliers } = data
+  const { client, commercant, passages, paliers, totalPassages } = data
   const seuil = commercant.seuil_reward || 10
   const restant = Math.max(0, seuil - client.points)
-  const nbPassages = passages.length
+  const nbPassages = totalPassages || passages.length
   const level = getLevel(nbPassages)
   const rewardReached = client.points >= seuil
 
@@ -318,6 +318,29 @@ export default function Carte() {
                 </button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Apple Wallet */}
+        {/iphone|ipad|ipod/i.test(navigator.userAgent) && (
+          <div style={{ marginBottom: 12 }}>
+            <a
+              href={`${import.meta.env.VITE_API_URL}/wallet/${id}`}
+              style={{ display: 'block' }}
+            >
+              <img
+                src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/resources/add-to-apple-wallet-badge.svg"
+                alt="Ajouter à Apple Wallet"
+                style={{ width: '100%', maxWidth: 200, display: 'block', margin: '0 auto' }}
+                onError={e => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'block'
+                }}
+              />
+              <div style={{ display: 'none', background: 'black', color: 'white', borderRadius: 12, padding: '12px 20px', textAlign: 'center', fontWeight: 700, fontSize: 15 }}>
+                🍎 Ajouter à Apple Wallet
+              </div>
+            </a>
           </div>
         )}
 

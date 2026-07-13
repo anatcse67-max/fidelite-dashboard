@@ -322,7 +322,7 @@ export default function Dashboard() {
                           <button className="btn btn-success btn-sm" onClick={() => { setCommercant(JSON.parse(localStorage.getItem('commercant') || '{}')); setShowScan(c); setScanNote('') }}>
                             + Points
                           </button>
-                          <a href={`https://fidelite-dashboard-kohl.vercel.app/carte/${c.id}`} target="_blank" rel="noreferrer"
+                          <a href={`${window.location.origin}/carte/${c.id}`} target="_blank" rel="noreferrer"
                             className="btn btn-outline btn-sm">
                             Carte
                           </a>
@@ -399,6 +399,7 @@ export default function Dashboard() {
             <div style={{ padding: '12px 0' }}>
               {[
                 { icon: '📱', label: 'QR Code enseigne', action: () => { setShowQR(true); setShowMobileMenu(false) } },
+                { icon: '🖨️', label: 'Affiche imprimable', action: () => { setShowPrint(true); setShowMobileMenu(false) } },
                 { icon: '📥', label: 'Exporter les clients (CSV)', action: () => { exportCSV(); setShowMobileMenu(false) } },
               ].map(({ icon, label, action }) => (
                 <button key={label} onClick={action} style={{ width: '100%', padding: '14px 24px', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, cursor: 'pointer', color: 'var(--text)' }}>
@@ -521,15 +522,15 @@ export default function Dashboard() {
                 Vos clients scannent ce code pour créer leur carte de fidélité
               </p>
               <div style={{ padding: 20, background: 'var(--bg)', borderRadius: 16, border: '2px solid var(--border)' }}>
-                <QRCodeSVG value={`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`} size={200} fgColor={commercant.couleur || 'var(--primary)'} />
+                <QRCodeSVG value={`${window.location.origin}/inscription/${commercant.id}`} size={200} fgColor={commercant.couleur || 'var(--primary)'} />
               </div>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                fidelite-dashboard-kohl.vercel.app/inscription/{commercant.id?.slice(0, 8)}...
+                {window.location.host}/inscription/{commercant.id?.slice(0, 8)}...
               </p>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowQR(false)}>Fermer</button>
-              <button className="btn btn-primary" onClick={() => window.open(`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`, '_blank')}>
+              <button className="btn btn-primary" onClick={() => window.open(`${window.location.origin}/inscription/${commercant.id}`, '_blank')}>
                 Ouvrir la page
               </button>
             </div>
@@ -579,7 +580,7 @@ export default function Dashboard() {
                   {/* QR Code */}
                   <div style={{ display: 'inline-block', padding: 14, background: 'white', borderRadius: 16, border: `3px solid ${commercant.couleur || '#4f46e5'}`, marginBottom: 16 }}>
                     <QRCodeSVG
-                      value={`https://fidelite-dashboard-kohl.vercel.app/inscription/${commercant.id}`}
+                      value={`${window.location.origin}/inscription/${commercant.id}`}
                       size={160}
                       fgColor={commercant.couleur || '#4f46e5'}
                     />

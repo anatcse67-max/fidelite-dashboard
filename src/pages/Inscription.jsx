@@ -80,7 +80,11 @@ export default function Inscription() {
                 userVisibleOnly: true,
                 applicationServerKey: vapidKey
               })
-              await api.post(`/clients/${client.id}/subscribe`, { subscription: sub })
+              await api.post('/notifications/subscribe', {
+                subscription: sub.toJSON(),
+                client_id: client.id,
+                commercant_id: enseigne.id
+              })
             }
           } catch (e) { console.warn('Push subscription failed', e) }
         }
