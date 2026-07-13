@@ -58,6 +58,7 @@ export default function Profile() {
     parrainage_nb_min: saved.parrainage_nb_min || 1,
     reward_expiry_days: saved.reward_expiry_days || '',
     points_expiry_days: saved.points_expiry_days || '',
+    pass_style: saved.pass_style || 'tampons',
   })
   const [paliers, setPaliers] = useState([])
   const [newPalier, setNewPalier] = useState({ points_requis: '', description: '', type: 'texte', valeur: '' })
@@ -364,7 +365,40 @@ export default function Profile() {
             </button>
           </form>
 
-          {/* 6. Mot de passe — hors du form principal */}
+          {/* 6. Apple Wallet */}
+          <Accordion icon="🍎" title="Carte Apple Wallet" subtitle="Style visuel de la carte sur iPhone">
+            <div style={{ paddingTop: 16 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>Choisissez l'apparence de votre carte dans Apple Wallet.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                {[
+                  { value: 'tampons', label: 'Tampons', emoji: '🟣', desc: 'Cercles à remplir' },
+                  { value: 'barres', label: 'Barre', emoji: '▓', desc: 'Progression' },
+                  { value: 'etoiles', label: 'Étoiles', emoji: '⭐', desc: 'Étoiles dorées' },
+                ].map(s => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => set('pass_style', s.value)}
+                    style={{
+                      padding: '12px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'center',
+                      border: `2px solid ${form.pass_style === s.value ? (form.couleur || '#4f46e5') : 'var(--border)'}`,
+                      background: form.pass_style === s.value ? (form.couleur || '#4f46e5') + '18' : 'var(--card)',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    <div style={{ fontSize: 24, marginBottom: 4 }}>{s.emoji}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{s.desc}</div>
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 12, textAlign: 'center' }}>
+                💡 Le logo affiché est votre photo de profil (section Mon enseigne)
+              </p>
+            </div>
+          </Accordion>
+
+          {/* 7. Mot de passe — hors du form principal */}
           <Accordion icon="🔒" title="Changer le mot de passe" subtitle="Modifier votre mot de passe de connexion">
             <form onSubmit={savePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 16 }}>
               <div>
