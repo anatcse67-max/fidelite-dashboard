@@ -325,7 +325,7 @@ export default function Carte() {
         {/iphone|ipad|ipod/i.test(navigator.userAgent) && (
           <div style={{ marginBottom: 12 }}>
             <a
-              href={`${import.meta.env.VITE_API_URL}/wallet/${id}`}
+              href={`https://fidelite-backend.onrender.com/wallet/${id}`}
               style={{ display: 'block' }}
             >
               <img
